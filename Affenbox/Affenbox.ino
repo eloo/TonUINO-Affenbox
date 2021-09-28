@@ -1953,12 +1953,11 @@ static void nextTrack(uint8_t track, bool force /* = false */)
 
   switch (myFolder->mode)
   {
-    //case AudioDrama:
-    //case AudioDrama_Section:
-    //if (myTrigger.next) { //nextTrack bei Hörspielen nur bei externem Trigger
-    //currentTrack = random(1, numTracksInFolder + 1);
-    //}
-    //break;
+    case AudioDrama:
+    case AudioDrama_Section:
+      resetCurrentCard();
+      return;
+    break;
     case Album:
       if (currentTrack < numTracksInFolder)
       {
@@ -1970,6 +1969,7 @@ static void nextTrack(uint8_t track, bool force /* = false */)
       }
       else
       {
+        resetCurrentCard();
         return;
       }
       break;
@@ -1984,6 +1984,7 @@ static void nextTrack(uint8_t track, bool force /* = false */)
       }
       else
       {
+        resetCurrentCard();
         return;
       }
       break;
@@ -2020,6 +2021,7 @@ static void nextTrack(uint8_t track, bool force /* = false */)
       else
       {
         writeCardMemory(firstTrack, !isPlaying());
+        resetCurrentCard();
         return;
       }
 
@@ -2033,6 +2035,7 @@ static void nextTrack(uint8_t track, bool force /* = false */)
       else
       {
         writeCardMemory(firstTrack, !isPlaying());
+        resetCurrentCard();
         return;
       }
       break;
@@ -2041,8 +2044,6 @@ static void nextTrack(uint8_t track, bool force /* = false */)
 #ifdef DEBUG
       Serial.println(F("no nxt track"));
 #endif
-      //setstandbyTimer();
-      //delay(500);
       return;
       break;
   }
@@ -3083,12 +3084,10 @@ void adminMenu(bool fromCard /* = false */)
 #if defined DEBUG
   Serial.println(F("adminMenu"));
 #endif
-  knownCard = false;
-  memset(lastCardUid, 0, sizeof(lastCardUid));
-  activeShortCut = -1;
+  resetCurrentCard();
 
   mp3Pause();
-  //disablestandbyTimer();
+  disablestandbyTimer();
 
   if (fromCard == false)
   {
@@ -3101,7 +3100,7 @@ void adminMenu(bool fromCard /* = false */)
 
   do
   {
-    subMenu = voiceMenu(15, 900, 900, false, false, 0);
+    subMenu = voiceMenu(13, 900, 900, false, false, 0);
     if (subMenu == Exit)
     {
       writeSettings();
@@ -3339,7 +3338,7 @@ void adminMenu(bool fromCard /* = false */)
     }
     else if (subMenu == LockAdminMenu)
     {
-      switch (voiceMenu(2, 980, 980))
+      switch (voiceMenu(2, 986, 986))
       {
         case 1:
           mySettings.adminMenuLocked = 0;
@@ -3643,7 +3642,7 @@ void setupCard()
   {
     // Karte ist konfiguriert > speichern
     mp3Pause();
-    memset(lastCardUid, 0, sizeof(lastCardUid));
+    resetCurrentCard();
     writeCard(newCard);
   }
 }
@@ -4408,6 +4407,13 @@ void onNewCard()
     waitForTrackToFinish();
     setupCard();
   }
+}
+
+void resetCurrentCard()
+{
+  knownCard = false;
+  memset(lastCardUid, 0, sizeof(lastCardUid));
+  activeShortCut = -1;
 }
 
 /// Funktionen für den Standby Timer (z.B. über Pololu-Switch oder Mosfet)
