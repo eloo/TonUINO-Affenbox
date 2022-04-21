@@ -241,7 +241,7 @@ void resetSettings()
   mySettings.version = 3;
   mySettings.maxVolume = 25;
   mySettings.minVolume = 1;
-  mySettings.initVolume = 18;
+  mySettings.initVolume = 13;
   mySettings.eq = 1;
   mySettings.locked = false;
   mySettings.standbyTimer = 1;
@@ -804,7 +804,7 @@ class QuizGame : public Modifier
       waitForTrackToFinish();
 
       this->PartOneFolder = special;
-      numTracksInFolder = mp3.getFolderTrackCount(this->PartOneFolder);
+      numTracksInFolder = getFolderTrackCount(this->PartOneFolder);
       firstTrack = 1;
       shuffleQueue();
       currentTrack = 0;
@@ -817,7 +817,7 @@ class QuizGame : public Modifier
 
     void next()
     {
-      //numTracksInFolder = mp3.getFolderTrackCount(this->PartOneFolder);
+      //numTracksInFolder = getFolderTrackCount(this->PartOneFolder);
 
       if (currentTrack < numTracksInFolder)
       {
@@ -1029,7 +1029,7 @@ class QuizGame : public Modifier
 
       this->AnnouncementFolder = special2;
       this->PartOneFolder = special;
-      numTracksInFolder = mp3.getFolderTrackCount(this->PartOneFolder);
+      numTracksInFolder = getFolderTrackCount(this->PartOneFolder);
       firstTrack = 1;
       shuffleQueue();
       currentTrack = 0;
@@ -1041,7 +1041,7 @@ class QuizGame : public Modifier
     }
 
     void  next() {
-      numTracksInFolder = mp3.getFolderTrackCount(this->PartOneFolder);
+      numTracksInFolder = getFolderTrackCount(this->PartOneFolder);
 
       if (currentTrack != numTracksInFolder - firstTrack + 1) {
   #if defined DEBUG
@@ -1141,7 +1141,7 @@ class ButtonSmash : public Modifier
       delay(100);
 
       this->Folder = special;
-      numTracksInFolder = mp3.getFolderTrackCount(Folder);
+      numTracksInFolder = getFolderTrackCount(Folder);
 
       firstTrack = 1;
       shuffleQueue();
@@ -1151,7 +1151,7 @@ class ButtonSmash : public Modifier
     void next()
     {
       mp3Pause();
-      numTracksInFolder = mp3.getFolderTrackCount(this->Folder);
+      numTracksInFolder = getFolderTrackCount(this->Folder);
 
       if (currentTrack != numTracksInFolder - firstTrack + 1)
       {
@@ -1726,20 +1726,37 @@ void SetVolume(uint8_t volume) {
   delay(100);
 }
 
-void PlayMp3FolderTrack(uint16_t Track)
-{
+void PlayMp3FolderTrack(uint16_t Track) {
   disablestandbyTimer();
   mp3.playMp3FolderTrack(Track);
+}
+
+void initSD() {
+  // delay(1100);
+  // Serial.print("Folders in SD \t"); Serial.print(mp3.getTotalFolderCount());Serial.print("\n");
+  Serial.print("Tracks in folder 01\t"); Serial.print(getFolderTrackCount(1));Serial.print("\n");
+#if defined DEBUG
+  // Serial.print("Tracks in folder 02\t"); Serial.print(getFolderTrackCount(2));Serial.print("\n");
+  // Serial.print("Tracks in folder 03\t"); Serial.print(getFolderTrackCount(3));Serial.print("\n");
+  // Serial.print("Tracks in folder 04\t"); Serial.print(getFolderTrackCount(4));Serial.print("\n");
+  // Serial.print("Tracks in folder 05\t"); Serial.print(getFolderTrackCount(5));Serial.print("\n");
+  // Serial.print("Tracks in folder 06\t"); Serial.print(getFolderTrackCount(6));Serial.print("\n");
+#endif
+}
+
+uint16_t getFolderTrackCount(uint16_t folder) {
+  numTracksInFolder = mp3.getFolderTrackCount(folder);
+  return numTracksInFolder;
 }
 
 void playFolder()
 {
   // uint8_t counter = 0;
   bool queueTrack = false;
-
   mp3.loop();
   _lastTrackFinished = 0;
-  numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
+  numTracksInFolder = getFolderTrackCount(myFolder->folder);
+
   firstTrack = 1;
 
   switch (myFolder->mode)
@@ -2024,7 +2041,7 @@ static void nextTrack(uint8_t track, bool force /* = false */)
       break;
 
     case AudioBook:
-      numTracksInFolder = mp3.getFolderTrackCount(myFolder->folder);
+      // numTracksInFolder = getFolderTrackCount(myFolder->folder);
 #ifdef DEBUG
       Serial.print(F("current track: "));
       Serial.println(currentTrack);
@@ -2418,6 +2435,9 @@ void setup()
   getShortCuts();
 
   delay(1500);
+
+  initSD();
+
 
 #if defined AiO
   //  verstärker an
@@ -3201,9 +3221,9 @@ void adminMenu(bool fromCard /* = false */)
       tempCard.version = 1;
       tempCard.nfcFolderSettings.mode = Single;
       tempCard.nfcFolderSettings.folder = voiceMenu(99, 301, 0, true);
-      uint8_t special = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
+      uint8_t special = voiceMenu(getFolderTrackCount(tempCard.nfcFolderSettings.folder), 321, 0,
                                   true, tempCard.nfcFolderSettings.folder, true);
-      uint8_t special2 = voiceMenu(mp3.getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
+      uint8_t special2 = voiceMenu(getFolderTrackCount(tempCard.nfcFolderSettings.folder), 322, 0,
                                    true, tempCard.nfcFolderSettings.folder, special, true);
 
       PlayMp3FolderTrack(936);
@@ -3563,7 +3583,7 @@ bool setupFolder(folderSettings *theFolder)
       Serial.println(F("Single"));
 #endif
       //Einzeltrack in special speichern
-      theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 320, 0,
+      theFolder->special = voiceMenu(getFolderTrackCount(theFolder->folder), 320, 0,
                                      true, theFolder->folder, 0, true);
       break;
     case AudioDrama_Section:
@@ -3574,9 +3594,9 @@ bool setupFolder(folderSettings *theFolder)
       Serial.println(F("Section"));
 #endif
       //Von (special), Bis (special2) speichern
-      theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 321, 0,
+      theFolder->special = voiceMenu(getFolderTrackCount(theFolder->folder), 321, 0,
                                      true, theFolder->folder);
-      theFolder->special2 = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 322, 0,
+      theFolder->special2 = voiceMenu(getFolderTrackCount(theFolder->folder), 322, 0,
                                       true, theFolder->folder, theFolder->special);
 
     case AudioBook:
@@ -3609,7 +3629,7 @@ bool setupFolder(folderSettings *theFolder)
 #if defined DEBUG
       Serial.println(F("PuzzlePart"));
 #endif
-      theFolder->special = voiceMenu(mp3.getFolderTrackCount(theFolder->folder), 323, 0,
+      theFolder->special = voiceMenu(getFolderTrackCount(theFolder->folder), 323, 0,
                                      true, theFolder->folder, 0, true);
       theFolder->special2 = voiceMenu(255, 324, 0,
                                       false, theFolder->folder, 0, true);
